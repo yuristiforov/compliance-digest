@@ -1,0 +1,7 @@
+feedparser
+anthropic
+pyyaml
+python-dotenv
+requests
+beautifulsoup4
+lxml

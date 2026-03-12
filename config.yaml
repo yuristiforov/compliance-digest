@@ -1,0 +1,68 @@
+sources:
+  - name: "Finextra"
+    url: "https://www.finextra.com/rss/headlines.aspx"
+    method: rss
+    enabled: true
+
+  - name: "The Paypers"
+    url: "https://www.thepaypers.com/news"
+    method: scrape
+    scraper: paypers
+    enabled: true
+
+  - name: "CoinDesk"
+    url: "https://www.coindesk.com/arc/outboundfeeds/rss/"
+    method: rss
+    enabled: true
+
+  - name: "IAPP"
+    url: "https://iapp.org/sitemap.xml"
+    method: scrape
+    scraper: iapp
+    enabled: true
+
+  - name: "Finance Magnates"
+    url: "https://www.financemagnates.com/feeds/?fmfeed=general"
+    method: rss
+    enabled: true
+
+  - name: "Gambling Insider"
+    url: "https://www.gamblinginsider.com/feed"
+    method: rss
+    enabled: true
+
+  - name: "FinTech Global"
+    url: "https://fintech.global/feed/"
+    method: rss
+    enabled: true
+
+  - name: "ACAMS Today"
+    url: ""
+    method: rss
+    enabled: false
+    # Disabled: acamstoday.org migrated to acams.org (Drupal 11 SPA).
+    # All RSS endpoints redirect to 404. No accessible feed without JS rendering.
+
+email:
+  to: "stifor96@gmail.com"
+  from_name: "Compliance Digest Bot"
+  smtp_server: "smtp.gmail.com"
+  smtp_port: 587
+  smtp_user: ""
+  smtp_password: ""
+  subject_template: "Compliance Digest — {date}"
+schedule:
+  time_utc: "06:00"
+digest:
+  language: "ru"
+  format: "html"
+  include_all: true
+  max_articles_per_batch: 100
+  lookback_hours: 24
+llm:
+  provider: "anthropic"
+  model: "claude-haiku-4-5-20251001"
+  max_tokens_per_call: 4096
+  snippet_words: 150
+database:
+  path: "./data/digest.db"
