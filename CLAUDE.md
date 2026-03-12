@@ -219,7 +219,42 @@ from the rsync — server secrets and runtime data are never overwritten by a de
 
 ---
 
-## 7. Known Issues & Fixes
+## 7. Git Workflow
+
+Repository: https://github.com/yuristiforov/compliance-digest (public)
+
+### Deploy changes to server:
+1. Make changes locally
+2. Commit and push:
+   ```bash
+   git add .
+   git commit -m "description"
+   git push
+   ```
+3. Pull on server (via Claude Code server session or SSH):
+   ```bash
+   cd /root/compliance-digest && git pull
+   ```
+4. If `.sh` files were modified, fix line endings:
+   ```bash
+   sed -i 's/\r//' /root/compliance-digest/*.sh
+   ```
+
+### Never commit:
+- `.env` (secrets)
+- `data/*.db`, `data/*.html`, `data/*.log` (runtime data)
+- `__pycache__`, `.claude/`
+
+### After pulling on server — no restart needed:
+Cron picks up changes automatically on next scheduled run.
+To test immediately:
+```bash
+cd /root/compliance-digest && source venv/bin/activate && python main.py
+```
+
+---
+
+## 8. Known Issues & Fixes
 
 **`load_dotenv(override=True)`**
 On Windows, environment variables may be pre-set as empty strings at the system
@@ -259,7 +294,7 @@ corner → CRLF → change to LF).
 
 ---
 
-## 8. How to Extend
+## 9. How to Extend
 
 **Add a new RSS source:**
 1. Add a block to `config.yaml` under `sources`:
@@ -331,7 +366,7 @@ Edit `_PERIOD_CONFIG` at the bottom of `analyzer.py`. Keys per level:
 
 ---
 
-## 9. Testing
+## 10. Testing
 
 All test scripts live in the project root. Run from the project directory with the
 virtualenv active.
