@@ -27,7 +27,7 @@ from dotenv import load_dotenv
 load_dotenv(override=True)
 
 from db import get_articles_last_7_days, init_db
-from analyzer import build_momentum_prompt, _call_llm, _build_momentum_html
+from analyzer import build_momentum_prompt, _call_llm_raw, _build_momentum_html, _SYS_WEEKLY
 
 from datetime import datetime, timedelta
 
@@ -65,7 +65,8 @@ def main() -> None:
 
     # ── Step 2: run full analysis ─────────────────────────────────────────────
     print(f"Running momentum analysis on {count} article(s) using {model}…\n")
-    analysis_text, usage = _call_llm(articles, model)
+    user_prompt = build_momentum_prompt(articles)
+    analysis_text, usage = _call_llm_raw(_SYS_WEEKLY, user_prompt, model)
 
     print("─" * 60)
     print("LLM RESPONSE:")

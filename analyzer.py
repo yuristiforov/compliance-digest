@@ -34,6 +34,7 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 import anthropic
+import markdown as _markdown
 import yaml
 from dotenv import load_dotenv
 
@@ -569,6 +570,32 @@ def _call_llm_raw(
 
 
 # ===========================================================================
+# Internal: markdown → HTML
+# ===========================================================================
+
+def _md_to_html(text: str) -> str:
+    return _markdown.markdown(text, extensions=["tables", "nl2br"])
+
+
+_MD_STYLES = """\
+<style>
+.md-body h1,.md-body h2{color:#0f6aad;margin-top:24px;margin-bottom:8px;}
+.md-body h2{font-size:17px;border-bottom:1px solid #e0e0e0;padding-bottom:4px;}
+.md-body h3{font-size:15px;color:#333;margin-top:16px;}
+.md-body table{border-collapse:collapse;width:100%;margin:12px 0;}
+.md-body th{background:#0f6aad;color:#fff;padding:8px 12px;text-align:left;}
+.md-body td{padding:7px 12px;border-bottom:1px solid #eee;}
+.md-body tr:nth-child(even) td{background:#f8f9fa;}
+.md-body strong{color:#111;}
+.md-body blockquote{border-left:3px solid #0f6aad;margin:12px 0;padding:8px 16px;
+  background:#f0f7ff;color:#555;}
+.md-body hr{border:none;border-top:1px solid #e0e0e0;margin:20px 0;}
+.md-body ul,.md-body ol{padding-left:20px;}
+.md-body li{margin-bottom:4px;}
+</style>"""
+
+
+# ===========================================================================
 # Internal: HTML builders
 # ===========================================================================
 
@@ -593,12 +620,15 @@ def _build_momentum_html(
     generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     title_text = f"Momentum Report — неделя {date_from} – {date_to}"
 
+    converted_html = _md_to_html(analysis_text)
+
     return f"""<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>{escape(title_text)}</title>
+  {_MD_STYLES}
 </head>
 <body style="margin:0;padding:0;background:#f0f4f8;
              font-family:Arial,Helvetica,sans-serif;color:#202124;
@@ -617,9 +647,9 @@ def _build_momentum_html(
     <div style="padding:28px 32px 32px;">
       <div style="background:#f8f9fa;border-left:4px solid {accent};
                   border-radius:0 6px 6px 0;padding:20px 24px;">
-        <pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;
-                    font-family:Arial,Helvetica,sans-serif;font-size:14px;
-                    line-height:1.75;color:#303030;">{escape(analysis_text)}</pre>
+        <div class="md-body" style="font-size:14px;line-height:1.75;color:#303030;">
+          {converted_html}
+        </div>
       </div>
     </div>
     <div style="background:#f8f9fa;border-top:1px solid #e0e0e0;
@@ -660,12 +690,17 @@ def _build_periodic_html(
     source_label_ru = cfg["source_label_ru"]
     generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
+    converted_html = _md_to_html(analysis_text)
+    accent_override = f"<style>.md-body h1,.md-body h2{{color:{accent};}} .md-body th{{background:{accent};}}</style>"
+
     return f"""<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>{escape(title)} — {escape(period_label)}</title>
+  {_MD_STYLES}
+  {accent_override}
 </head>
 <body style="margin:0;padding:0;background:#f0f4f8;
              font-family:Arial,Helvetica,sans-serif;color:#202124;
@@ -684,9 +719,9 @@ def _build_periodic_html(
     <div style="padding:28px 32px 32px;">
       <div style="background:#f8f9fa;border-left:4px solid {accent};
                   border-radius:0 6px 6px 0;padding:20px 24px;">
-        <pre style="margin:0;white-space:pre-wrap;word-wrap:break-word;
-                    font-family:Arial,Helvetica,sans-serif;font-size:14px;
-                    line-height:1.75;color:#303030;">{escape(analysis_text)}</pre>
+        <div class="md-body" style="font-size:14px;line-height:1.75;color:#303030;">
+          {converted_html}
+        </div>
       </div>
     </div>
     <div style="background:#f8f9fa;border-top:1px solid #e0e0e0;
