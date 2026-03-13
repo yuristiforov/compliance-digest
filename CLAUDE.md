@@ -292,6 +292,11 @@ Fix on server: `sed -i 's/\r//' run.sh`.
 Prevention: always save shell scripts with LF endings (in VS Code: bottom-right
 corner → CRLF → change to LF).
 
+**Server path in shell scripts**
+All `.sh` files must use `/root/compliance-digest` — NOT `/opt/compliance-digest`.
+If scripts are recreated or edited, verify the path. Silent cron failures with no
+log output are almost always caused by a wrong `cd` path in the shell script.
+
 ---
 
 ## 9. How to Extend
