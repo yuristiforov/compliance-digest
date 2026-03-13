@@ -252,6 +252,22 @@ To test immediately:
 cd /root/compliance-digest && source venv/bin/activate && python main.py
 ```
 
+### SSH config on server:
+The server uses a dedicated key `~/.ssh/id_ed25519_compliance` with a host alias
+`github-compliance` defined in `~/.ssh/config`. The git remote URL is:
+```
+git@github-compliance:yuristiforov/compliance-digest.git
+```
+This is **not** the standard `github.com` remote — the alias is required for the
+correct deploy key to be selected.
+
+If SSH stops working on the server:
+- Check that `~/.ssh/config` exists and contains a `Host github-compliance` block.
+- Test connectivity with: `ssh -T git@github-compliance`
+
+The original `vps-complit-bot` key is already registered as a deploy key for the
+`complit-bot` repo and cannot be reused. Do not attempt to add it to this repo.
+
 ---
 
 ## 8. Known Issues & Fixes
