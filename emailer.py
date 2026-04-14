@@ -189,7 +189,8 @@ def send_digest(html: str, email_config: dict) -> None:
     # Gmail App Passwords are shown with spaces; strip them.
     app_password = app_password.replace(" ", "")
 
-    recipient = email_config["to"]
+    to_field = email_config["to"]
+    recipients = to_field if isinstance(to_field, list) else [to_field]
     from_name = email_config.get("from_name", "Compliance Digest Bot")
     smtp_server = email_config.get("smtp_server", "smtp.gmail.com")
     smtp_port = int(email_config.get("smtp_port", 587))
@@ -202,7 +203,7 @@ def send_digest(html: str, email_config: dict) -> None:
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = f"{from_name} <{gmail_user}>"
-    msg["To"] = recipient
+    msg["To"] = ", ".join(recipients)
     msg.attach(MIMEText(html, "html", "utf-8"))
 
     try:
@@ -211,10 +212,10 @@ def send_digest(html: str, email_config: dict) -> None:
             server.starttls()
             server.ehlo()
             server.login(gmail_user, app_password)
-            server.sendmail(gmail_user, [recipient], msg.as_bytes())
-        logger.info("Digest sent to %s (subject: %s)", recipient, subject)
+            server.sendmail(gmail_user, recipients, msg.as_bytes())
+        logger.info("Digest sent to %s (subject: %s)", ", ".join(recipients), subject)
     except Exception as exc:
-        logger.error("Failed to send digest to %s: %s", recipient, exc)
+        logger.error("Failed to send digest to %s: %s", ", ".join(recipients), exc)
         raise
 
 

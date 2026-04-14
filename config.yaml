@@ -44,7 +44,9 @@ sources:
     # All RSS endpoints redirect to 404. No accessible feed without JS rendering.
 
 email:
-  to: "stifor96@gmail.com"
+  to:
+    - "stifor96@gmail.com"
+    - "avkhimchenko@gmail.com"
   from_name: "Compliance Digest Bot"
   smtp_server: "smtp.gmail.com"
   smtp_port: 587

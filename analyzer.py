@@ -795,7 +795,8 @@ def _send_email(html: str, subject: str, email_config: dict) -> None:
     )
     app_password = app_password.replace(" ", "")
 
-    recipient = email_config["to"]
+    to_field = email_config["to"]
+    recipients = to_field if isinstance(to_field, list) else [to_field]
     from_name = email_config.get("from_name", "Compliance Digest Bot")
     smtp_server = email_config.get("smtp_server", "smtp.gmail.com")
     smtp_port = int(email_config.get("smtp_port", 587))
@@ -803,7 +804,7 @@ def _send_email(html: str, subject: str, email_config: dict) -> None:
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = f"{from_name} <{gmail_user}>"
-    msg["To"] = recipient
+    msg["To"] = ", ".join(recipients)
     msg.attach(MIMEText(html, "html", "utf-8"))
 
     with smtplib.SMTP(smtp_server, smtp_port) as server:
@@ -811,7 +812,7 @@ def _send_email(html: str, subject: str, email_config: dict) -> None:
         server.starttls()
         server.ehlo()
         server.login(gmail_user, app_password)
-        server.sendmail(gmail_user, [recipient], msg.as_bytes())
+        server.sendmail(gmail_user, recipients, msg.as_bytes())
 
 
 # ===========================================================================
