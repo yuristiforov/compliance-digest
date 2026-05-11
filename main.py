@@ -68,6 +68,7 @@ def run() -> None:
     llm_config = {
         **config["llm"],
         "max_articles_per_batch": config["digest"]["max_articles_per_batch"],
+        "db_path": db_path,
     }
     lookback_hours = config["digest"].get("lookback_hours", 24)
 

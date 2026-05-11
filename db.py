@@ -52,6 +52,18 @@ def init_db(db_path: str) -> None:
                 UNIQUE (period_type, period_label)
             )
         """)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS llm_calls (
+                id             INTEGER PRIMARY KEY AUTOINCREMENT,
+                provider       TEXT NOT NULL,
+                model          TEXT NOT NULL,
+                input_tokens   INTEGER NOT NULL,
+                output_tokens  INTEGER NOT NULL,
+                reasoning_tokens INTEGER DEFAULT 0,
+                cost_usd       REAL NOT NULL,
+                created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
         conn.commit()
     migrate_db(db_path)
 
@@ -143,6 +155,38 @@ def mark_seen(db_path: str, articles: list[dict]) -> None:
             article_rows,
         )
         conn.commit()
+
+
+def write_llm_call(
+    db_path: str,
+    provider: str,
+    model: str,
+    input_tokens: int,
+    output_tokens: int,
+    cost_usd: float,
+) -> None:
+    """Record one LLM API call in the llm_calls table.
+
+    Args:
+        db_path:       Path to the SQLite database file.
+        provider:      API provider name (e.g. 'anthropic').
+        model:         Model ID string.
+        input_tokens:  Number of input/prompt tokens consumed.
+        output_tokens: Number of output/completion tokens consumed.
+        cost_usd:      Calculated cost in USD.
+    """
+    try:
+        with sqlite3.connect(db_path) as conn:
+            conn.execute(
+                """INSERT INTO llm_calls
+                   (provider, model, input_tokens, output_tokens, cost_usd)
+                   VALUES (?, ?, ?, ?, ?)""",
+                (provider, model, input_tokens, output_tokens, cost_usd),
+            )
+            conn.commit()
+    except Exception as exc:
+        import logging as _logging
+        _logging.getLogger(__name__).warning("write_llm_call failed: %s", exc)
 
 
 def get_articles_last_7_days(db_path: str) -> list[dict]:

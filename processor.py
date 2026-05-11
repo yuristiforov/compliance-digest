@@ -16,6 +16,8 @@ import time
 import anthropic
 from dotenv import load_dotenv
 
+from db import write_llm_call
+
 # override=True ensures .env values win even if the var is already set
 # as an empty string in the Windows environment.
 load_dotenv(override=True)
@@ -131,6 +133,14 @@ def _call_llm(batch: list[dict], llm_config: dict) -> list[dict]:
             batch[0].setdefault("_usage", {"input_tokens": 0, "output_tokens": 0})
             batch[0]["_usage"]["input_tokens"] += message.usage.input_tokens
             batch[0]["_usage"]["output_tokens"] += message.usage.output_tokens
+
+            # Track tokens in llm_calls table (haiku pricing: 1.0/5.0 per MTok).
+            db_path = llm_config.get("db_path")
+            if db_path:
+                in_tok = message.usage.input_tokens
+                out_tok = message.usage.output_tokens
+                cost = (in_tok * 1.0 + out_tok * 5.0) / 1_000_000
+                write_llm_call(db_path, "anthropic", model, in_tok, out_tok, cost)
 
             return _parse_llm_response(response_text, batch)
 

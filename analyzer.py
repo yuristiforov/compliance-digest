@@ -45,6 +45,7 @@ from db import (
     get_report_summaries,
     init_db,
     save_report_summary,
+    write_llm_call,
 )
 
 logger = logging.getLogger(__name__)
@@ -379,11 +380,11 @@ def run_weekly_analysis() -> None:
     logger.info("Calling LLM (%s) for momentum analysis…", model)
     user_prompt = build_momentum_prompt(articles)
     analysis_text, usage = _call_llm_raw(_SYS_WEEKLY, user_prompt, model)
-    logger.info(
-        "LLM usage — input: %d tokens, output: %d tokens.",
-        usage.get("input_tokens", 0),
-        usage.get("output_tokens", 0),
-    )
+    in_tok = usage.get("input_tokens", 0)
+    out_tok = usage.get("output_tokens", 0)
+    logger.info("LLM usage — input: %d tokens, output: %d tokens.", in_tok, out_tok)
+    cost = (in_tok * 1.0 + out_tok * 5.0) / 1_000_000
+    write_llm_call(db_path, "anthropic", model, in_tok, out_tok, cost)
 
     # ── 5. Determine date range + ISO week label ──────────────────────────────
     now = datetime.now()
@@ -496,11 +497,13 @@ def run_periodic_analysis(period_type: str) -> None:
     user_prompt = cfg["build_fn"](summaries, period_label)
     system_prompt = cfg["system_prompt"]
     analysis_text, usage = _call_llm_raw(system_prompt, user_prompt, model, max_tokens)
-    logger.info(
-        "LLM usage — input: %d tokens, output: %d tokens.",
-        usage.get("input_tokens", 0),
-        usage.get("output_tokens", 0),
-    )
+    in_tok = usage.get("input_tokens", 0)
+    out_tok = usage.get("output_tokens", 0)
+    logger.info("LLM usage — input: %d tokens, output: %d tokens.", in_tok, out_tok)
+    # sonnet-4-6 pricing: (3.0, 15.0); haiku fallback: (1.0, 5.0)
+    _in_p, _out_p = (3.0, 15.0) if "sonnet" in model else (1.0, 5.0)
+    cost = (in_tok * _in_p + out_tok * _out_p) / 1_000_000
+    write_llm_call(db_path, "anthropic", model, in_tok, out_tok, cost)
 
     # ── 6. Save to report_summaries ───────────────────────────────────────────
     save_report_summary(db_path, period_type, period_label, analysis_text)
